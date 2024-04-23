@@ -1,13 +1,7 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Plugin.LocalNotification;
-using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Tibber.Sdk;
 
 namespace MyTibberApp
@@ -18,21 +12,23 @@ namespace MyTibberApp
 
         public MainPageViewModel()
         {
-            _effectService = new EffectService(this);   
+            _effectService = new EffectService(this);
+            ListenerStatus = "Disconnected";
         }
+
+        [ObservableProperty]
+        private string listenerStatus;
 
         [ObservableProperty]
         private decimal accumulatedConsumptionLastHour;
 
         [ObservableProperty]
-        private decimal? lastMeterConsumption;
-
-        [ObservableProperty]
-        private string? currentTime;
+        private decimal power;
 
         [RelayCommand]
         async Task StartListener()
         {
+            ListenerStatus = "Connecting...";
             await _effectService.StartListening();
         }
 
@@ -42,17 +38,17 @@ namespace MyTibberApp
             await _effectService.StopListening();
         }
 
-        public void OnCompleted() => Debug.WriteLine("Real time measurement stream has been terminated.");
+        public void OnCompleted() => ListenerStatus = "Disconnected";
 
-        public void OnError(Exception error) => Debug.WriteLine($"An error occured: {error}");
+        public void OnError(Exception error) => ListenerStatus = $"Error: {error.Message}";
 
         public void OnNext(RealTimeMeasurement value)
         {
             Debug.WriteLine($"{value.Timestamp} - power: {value.Power:N0} W (average: {value.AveragePower:N0} W); consumption since last midnight: {value.AccumulatedConsumption:N3} kWh; cost since last midnight: {value.AccumulatedCost:N2} {value.Currency}");
 
+            ListenerStatus = $"Connected ({value.Timestamp.TimeOfDay})";
             AccumulatedConsumptionLastHour = value.AccumulatedConsumptionLastHour;
-            LastMeterConsumption = value.LastMeterConsumption;
-            CurrentTime = value.Timestamp.TimeOfDay.ToString();
+            Power = value.Power;
 
             const decimal consumptionLimit = 0.5m;
             if (value.AccumulatedConsumptionLastHour > consumptionLimit)

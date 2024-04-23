@@ -15,27 +15,30 @@
 
             <Grid>
                 <Grid.RowDefinitions>
-                    <RowDefinition Height="2*" />
                     <RowDefinition Height="*" />
-                    <RowDefinition Height="100" />
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="*" />
                 </Grid.RowDefinitions>
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="auto" />
                     <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
 
-                <Label Text="Senast uppdaterad: "/>
+                <Label Text="Status: "
+                       FontAttributes="Bold"/>
                 <Label Grid.Column="1" 
-                       Text="{Binding CurrentTime}"/>
+                       Text="{Binding ListenerStatus}"/>
 
                 <Label Grid.Row="1"
-                       Text="Nuvarande elförbrukning: "/>
+                       Text="Nuvarande elförbrukning: "
+                       FontAttributes="Bold"/>
                 <Label Grid.Row="1"
                        Grid.Column="1" 
-                       Text="{Binding LastMeterConsumption, StringFormat='{0:F2} kWh'}"/>
+                       Text="{Binding Power, StringFormat='{0:F2} kWh'}"/>
                 
                 <Label Grid.Row="2"
-                       Text="Total förbruking senaste timmen: "/>
+                       Text="Total förbruking senaste timmen: "
+                       FontAttributes="Bold"/>
                 <Label Grid.Row="2"
                        Grid.Column="1" 
                        Text="{Binding AccumulatedConsumptionLastHour, StringFormat='{0:F2} kWh'}"/>
@@ -44,13 +47,11 @@
             <Button
                 Text="Börja lyssna" 
                 Command="{Binding StartListenerCommand}"
-                SemanticProperties.Hint="Counts the number of times you click"
                 HorizontalOptions="Fill" />
 
             <Button
                 Text="Sluta lyssna" 
                 Command="{Binding StopListenerCommand}"
-                SemanticProperties.Hint="Counts the number of times you click"
                 HorizontalOptions="Fill" />
         </VerticalStackLayout>
     </ScrollView>
