@@ -13,6 +13,8 @@ internal class Program
 
         builder.Services.AddHostedService<ConsumptionHostedService>();
         builder.Services.AddScoped<IObserver<RealTimeMeasurement>, ConsumptionObserver>();
+        builder.Services.AddScoped<HeaterService>();
+        builder.Services.AddHttpClient();
 
         using IHost host = builder.Build();
 
