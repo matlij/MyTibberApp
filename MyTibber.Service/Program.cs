@@ -1,6 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using System;
+using MyTibber.Service.Services;
 using Tibber.Sdk;
 
 namespace MyTibber.Service;
@@ -11,9 +11,10 @@ internal class Program
     {
         HostApplicationBuilder builder = Host.CreateApplicationBuilder(args);
 
-        builder.Services.AddHostedService<ConsumptionHostedService>();
+        builder.Services.AddHostedService<ConsumptionHost>();
         builder.Services.AddScoped<IObserver<RealTimeMeasurement>, ConsumptionObserver>();
         builder.Services.AddScoped<HeaterService>();
+        builder.Services.AddScoped<HeaterReposiory>();
         builder.Services.AddHttpClient();
 
         using IHost host = builder.Build();

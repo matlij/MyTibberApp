@@ -5,30 +5,26 @@ using Tibber.Sdk;
 
 namespace MyTibber.Service;
 
-public sealed class ConsumptionHostedService : IHostedService
+public sealed class ConsumptionHost : IHostedService
 {
-    private readonly ILogger _logger;
     private readonly string _accessToken = "hHYECYJUfCcxUbfFasjYmi4t59TDLFPPkE2Ox9yL214";
-    private readonly TibberApiClient _client;
-    private readonly IObserver<RealTimeMeasurement> _observer;
-    private readonly HeaterService _heaterService;
 
-    public ConsumptionHostedService(
-        ILogger<ConsumptionHostedService> logger,
-        IObserver<RealTimeMeasurement> observer,
-        HeaterService heaterService)
+    private readonly ILogger _logger;
+    private readonly IObserver<RealTimeMeasurement> _observer;
+    private readonly TibberApiClient _client;
+
+    public ConsumptionHost(
+        ILogger<ConsumptionHost> logger,
+        IObserver<RealTimeMeasurement> observer)
     {
         _logger = logger;
         _observer = observer;
-        _heaterService = heaterService;
         var userAgent = new ProductInfoHeaderValue("My-home-automation-system", "1.2");
         _client = new TibberApiClient(_accessToken, userAgent);
     }
 
     public async Task StartAsync(CancellationToken cancellationToken)
     {
-        //await _heaterService.SetHeat(0);
-     
         _logger.LogInformation("StartAsync has been called.");
 
         var homeId = await GetHomeId(_client, cancellationToken);

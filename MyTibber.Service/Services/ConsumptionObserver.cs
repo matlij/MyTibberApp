@@ -1,15 +1,17 @@
 ﻿using Microsoft.Extensions.Logging;
 using Tibber.Sdk;
 
-namespace MyTibber.Service;
+namespace MyTibber.Service.Services;
 
 public sealed class ConsumptionObserver : IObserver<RealTimeMeasurement>
 {
     private readonly ILogger<ConsumptionObserver> _logger;
+    private readonly HeaterService _heaterService;
 
-    public ConsumptionObserver(ILogger<ConsumptionObserver> logger) 
+    public ConsumptionObserver(ILogger<ConsumptionObserver> logger, HeaterService heaterService)
     {
         _logger = logger;
+        _heaterService = heaterService;
     }
 
     public void OnCompleted()
@@ -25,5 +27,9 @@ public sealed class ConsumptionObserver : IObserver<RealTimeMeasurement>
     public void OnNext(RealTimeMeasurement value)
     {
         _logger.LogInformation($"power: {value.Power:N0} W (average: {value.AveragePower:N0} W); consumption last hour: {value.AccumulatedConsumptionLastHour:N3} kWh; cost since last midnight: {value.AccumulatedCost:N2} {value.Currency}");
+
+        // Todo change to safe fire and forget
+        _heaterService.AdjustHeat(value.AccumulatedConsumptionLastHour).GetAwaiter().GetResult();
     }
 }
+

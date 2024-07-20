@@ -1,54 +1,46 @@
 ﻿using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net.Http;
+using MyTibber.Service.Models;
 using System.Net.Http.Json;
-using System.Reflection.Metadata;
-using System.Text;
 using System.Text.Json;
-using System.Text.Json.Serialization;
-using System.Threading.Tasks;
 
-namespace MyTibber.Service;
-
-internal class Token
-{
-    [JsonPropertyName("access_token")]
-    public string AccessToken { get; set; }
-
-    [JsonPropertyName("token_type")]
-    public string TokenType { get; set; }
-
-    [JsonPropertyName("expires_in")]
-    public int ExpiresIn { get; set; }
-
-    [JsonPropertyName("refresh_token")]
-    public string RefreshToken { get; set; }
-}
-
-public class DevicePoint
-{
-    public object? Value { get; set; }
-    public string? Unit { get; set; }
-}
+namespace MyTibber.Service.Services;
 
 public class HeaterService
 {
     private readonly ILogger<HeaterService> _logger;
     private readonly IHttpClientFactory _httpClientFactory;
+    private readonly HeaterReposiory _heaterReposiory;
 
-    public HeaterService(ILogger<HeaterService> logger, IHttpClientFactory httpClientFactory)
+    public HeaterService(ILogger<HeaterService> logger, IHttpClientFactory httpClientFactory, HeaterReposiory heaterReposiory)
     {
         _logger = logger;
         _httpClientFactory = httpClientFactory;
+        _heaterReposiory = heaterReposiory;
     }
 
-    public async Task<bool> SetHeat(int heatValue)
+    public async Task<bool> AdjustHeat(decimal accumulatedConsumptionLastHour)
     {
-        if (heatValue < -10 || heatValue > 10)
+        var heater = await _heaterReposiory.GetAsync();
+
+        var heatIsBelowNormal = heater.Heat < 0;
+
+        if (accumulatedConsumptionLastHour >= 2 && !heatIsBelowNormal)
         {
-            throw new ArgumentException($"Invalid value: {heatValue}", nameof(heatValue));
+            await SeatHeatInPump(-3);
+        }
+        else if (accumulatedConsumptionLastHour < 2 && heatIsBelowNormal)
+        {
+            await SeatHeatInPump(0);
+        }
+
+        return true;
+    }
+
+    private async Task<bool> SeatHeatInPump(int value)
+    {
+        if (value < -10 || value > 10)
+        {
+            throw new ArgumentException($"Invalid value: {value}", nameof(value));
         }
 
         var token = await GetAuthToken();
@@ -58,7 +50,7 @@ public class HeaterService
 
         var requestBody = new DevicePoint()
         {
-            Value = heatValue
+            Value = value
         };
 
         var deviceId = "emmy-r-208006-20240516-06605519022003-54-10-ec-c4-ca-9a";
@@ -70,7 +62,9 @@ public class HeaterService
         }
 
         var responseContent = await response.Content.ReadAsStringAsync();
-        _logger.LogInformation($"Sucessfully set heater temprature to {heatValue}. Response: {responseContent}");
+        _logger.LogInformation($"Sucessfully set heater temprature to {value}. Response: {responseContent}");
+
+        await _heaterReposiory.UpdateAsync(new Heater { Heat = value });
 
         return true;
     }
