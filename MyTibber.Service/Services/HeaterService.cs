@@ -18,22 +18,28 @@ public class HeaterService
         _heaterReposiory = heaterReposiory;
     }
 
-    public async Task<bool> AdjustHeat(decimal accumulatedConsumptionLastHour)
+    public async Task AdjustHeat(decimal accumulatedConsumptionLastHour)
     {
+        const decimal HOURLY_POWER_LIMIT = 2m;
+
         var heater = await _heaterReposiory.GetAsync();
 
-        var heatIsBelowNormal = heater.Heat < 0;
+        var currentHeatIsBelowZero = heater.Heat < 0;
 
-        if (accumulatedConsumptionLastHour >= 2 && !heatIsBelowNormal)
+        if (accumulatedConsumptionLastHour >= HOURLY_POWER_LIMIT && !currentHeatIsBelowZero)
         {
-            await SeatHeatInPump(-3);
+            _logger.LogInformation("Setting heat to -3");
+            await SeatHeatInPump(-1);
         }
-        else if (accumulatedConsumptionLastHour < 2 && heatIsBelowNormal)
+        else if (accumulatedConsumptionLastHour < HOURLY_POWER_LIMIT && currentHeatIsBelowZero)
         {
+            _logger.LogInformation("Setting heat to 0");
             await SeatHeatInPump(0);
         }
-
-        return true;
+        else
+        {
+            _logger.LogDebug("No need to adjust the heat. Current heat: {CurrentHeat}. Last update: {HeatLatestUpdate}", heater.Heat, heater.LatestUpdate);
+        }
     }
 
     private async Task<bool> SeatHeatInPump(int value)

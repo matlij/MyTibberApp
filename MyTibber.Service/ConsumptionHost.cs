@@ -25,7 +25,7 @@ public sealed class ConsumptionHost : IHostedService
 
     public async Task StartAsync(CancellationToken cancellationToken)
     {
-        _logger.LogInformation("StartAsync has been called.");
+        _logger.LogInformation($"{nameof(ConsumptionHost.StartAsync)} has been called.");
 
         var homeId = await GetHomeId(_client, cancellationToken);
 

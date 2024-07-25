@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using AsyncAwaitBestPractices;
+using Microsoft.Extensions.Logging;
 using Tibber.Sdk;
 
 namespace MyTibber.Service.Services;
@@ -28,8 +29,7 @@ public sealed class ConsumptionObserver : IObserver<RealTimeMeasurement>
     {
         _logger.LogInformation($"power: {value.Power:N0} W (average: {value.AveragePower:N0} W); consumption last hour: {value.AccumulatedConsumptionLastHour:N3} kWh; cost since last midnight: {value.AccumulatedCost:N2} {value.Currency}");
 
-        // Todo change to safe fire and forget
-        _heaterService.AdjustHeat(value.AccumulatedConsumptionLastHour).GetAwaiter().GetResult();
+        _heaterService.AdjustHeat(value.AccumulatedConsumptionLastHour).SafeFireAndForget(e => _logger.LogError($"Adjust heat failed: {e.Message}"));
     }
 }
 

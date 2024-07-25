@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using MyTibber.Service.Services;
 using Tibber.Sdk;
 
@@ -10,6 +11,8 @@ internal class Program
     static async Task Main(string[] args)
     {
         HostApplicationBuilder builder = Host.CreateApplicationBuilder(args);
+
+        builder.Logging.SetMinimumLevel(LogLevel.Debug);
 
         builder.Services.AddHostedService<ConsumptionHost>();
         builder.Services.AddScoped<IObserver<RealTimeMeasurement>, ConsumptionObserver>();

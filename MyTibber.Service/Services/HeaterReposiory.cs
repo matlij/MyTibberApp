@@ -5,12 +5,12 @@ namespace MyTibber.Service.Services;
 
 public class HeaterReposiory
 {
-    private const string FILE_PATH = "heatinglog.txt";
+    private const string FILE_PATH = "heater.json";
 
     public async Task<bool> UpdateAsync(Heater heater)
     {
         heater.LatestUpdate = DateTime.Now;
-        
+
         var data = JsonSerializer.Serialize(heater);
         await File.WriteAllTextAsync(FILE_PATH, data);
 
@@ -19,11 +19,18 @@ public class HeaterReposiory
 
     public async Task<Heater> GetAsync()
     {
-        var data = await File.ReadAllTextAsync(FILE_PATH);
+        try
+        {
+            var data = await File.ReadAllTextAsync(FILE_PATH);
 
-        var result = JsonSerializer.Deserialize<Heater>(data) 
-            ?? throw new InvalidOperationException($"Failed to Deserialize '{data}' to {nameof(Heater)}");
+            var result = JsonSerializer.Deserialize<Heater>(data) 
+                ?? throw new InvalidOperationException($"Failed to Deserialize '{data}' to {nameof(Heater)}");
 
-        return result;
+            return result;
+        }
+        catch (FileNotFoundException)
+        {
+            return new Heater();
+        }
     }
 }
