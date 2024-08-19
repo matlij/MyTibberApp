@@ -2,6 +2,7 @@
 using MyTibber.Service.Models;
 using System.Net.Http.Json;
 using System.Text.Json;
+using Tibber.Sdk;
 
 namespace MyTibber.Service.Services;
 
@@ -10,12 +11,14 @@ public class HeaterService
     private readonly ILogger<HeaterService> _logger;
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly HeaterReposiory _heaterReposiory;
+    private readonly TibberApiClient _tibberApiClient;
 
-    public HeaterService(ILogger<HeaterService> logger, IHttpClientFactory httpClientFactory, HeaterReposiory heaterReposiory)
+    public HeaterService(ILogger<HeaterService> logger, IHttpClientFactory httpClientFactory, HeaterReposiory heaterReposiory, TibberApiClient tibberApiClient)
     {
         _logger = logger;
         _httpClientFactory = httpClientFactory;
         _heaterReposiory = heaterReposiory;
+        _tibberApiClient = tibberApiClient;
     }
 
     public async Task AdjustHeat(decimal accumulatedConsumptionLastHour)
@@ -28,12 +31,10 @@ public class HeaterService
 
         if (accumulatedConsumptionLastHour >= HOURLY_POWER_LIMIT && !currentHeatIsBelowZero)
         {
-            _logger.LogInformation("Setting heat to -3");
             await SeatHeatInPump(-1);
         }
         else if (accumulatedConsumptionLastHour < HOURLY_POWER_LIMIT && currentHeatIsBelowZero)
         {
-            _logger.LogInformation("Setting heat to 0");
             await SeatHeatInPump(0);
         }
         else
@@ -60,7 +61,11 @@ public class HeaterService
         };
 
         var deviceId = "emmy-r-208006-20240516-06605519022003-54-10-ec-c4-ca-9a";
-        var response = await httpClient.PutAsJsonAsync($"v2/devices/{deviceId}/points/47011", requestBody);
+        var url = $"v2/devices/{deviceId}/points/47011";
+
+        _logger.LogInformation($"Calling endpoint {url}. Setting heat to {value}");
+
+        var response = await httpClient.PutAsJsonAsync(url, requestBody);
 
         if (!response.IsSuccessStatusCode)
         {

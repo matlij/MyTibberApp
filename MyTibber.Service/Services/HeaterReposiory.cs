@@ -30,7 +30,10 @@ public class HeaterReposiory
         }
         catch (FileNotFoundException)
         {
-            return new Heater();
+            return new Heater()
+            {
+                LatestUpdate = DateTime.MinValue,
+            };
         }
     }
 }

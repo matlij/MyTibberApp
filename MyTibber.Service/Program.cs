@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using MyTibber.Service.Services;
+using System.Net.Http.Headers;
 using Tibber.Sdk;
 
 namespace MyTibber.Service;
@@ -18,6 +19,12 @@ internal class Program
         builder.Services.AddScoped<IObserver<RealTimeMeasurement>, ConsumptionObserver>();
         builder.Services.AddScoped<HeaterService>();
         builder.Services.AddScoped<HeaterReposiory>();
+        builder.Services.AddScoped(s =>
+        {
+            var userAgent = new ProductInfoHeaderValue("My-home-automation-system", "1.2");
+            return new TibberApiClient("hHYECYJUfCcxUbfFasjYmi4t59TDLFPPkE2Ox9yL214", userAgent);
+        });
+
         builder.Services.AddHttpClient();
 
         using IHost host = builder.Build();

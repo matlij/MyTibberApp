@@ -1,36 +1,26 @@
 ﻿using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using System.Net.Http.Headers;
 using Tibber.Sdk;
 
 namespace MyTibber.Service;
 
-public sealed class ConsumptionHost : IHostedService
+public sealed class ConsumptionHost(
+    ILogger<ConsumptionHost> logger,
+    IObserver<RealTimeMeasurement> observer,
+    TibberApiClient tibberApiClient) : IHostedService
 {
-    private readonly string _accessToken = "hHYECYJUfCcxUbfFasjYmi4t59TDLFPPkE2Ox9yL214";
-
-    private readonly ILogger _logger;
-    private readonly IObserver<RealTimeMeasurement> _observer;
-    private readonly TibberApiClient _client;
-
-    public ConsumptionHost(
-        ILogger<ConsumptionHost> logger,
-        IObserver<RealTimeMeasurement> observer)
-    {
-        _logger = logger;
-        _observer = observer;
-        var userAgent = new ProductInfoHeaderValue("My-home-automation-system", "1.2");
-        _client = new TibberApiClient(_accessToken, userAgent);
-    }
+    private readonly ILogger _logger = logger;
 
     public async Task StartAsync(CancellationToken cancellationToken)
     {
         _logger.LogInformation($"{nameof(ConsumptionHost.StartAsync)} has been called.");
 
-        var homeId = await GetHomeId(_client, cancellationToken);
+        var validateRealtimeDeviceResult = await tibberApiClient.ValidateRealtimeDevice(cancellationToken);
 
-        var listener = await _client.StartRealTimeMeasurementListener(homeId, cancellationToken);
-        listener.Subscribe(_observer);
+        var homeId = await GetHomeId(tibberApiClient, cancellationToken);
+
+        var listener = await tibberApiClient.StartRealTimeMeasurementListener(homeId, cancellationToken);
+        listener.Subscribe(observer);
 
         _logger.LogInformation("Real Time Measurement listener started");
 
@@ -40,9 +30,9 @@ public sealed class ConsumptionHost : IHostedService
     {
         _logger.LogInformation("StopAsync has been called.");
 
-        var homeId = await GetHomeId(_client, cancellationToken);
+        var homeId = await GetHomeId(tibberApiClient, cancellationToken);
 
-        await _client.StopRealTimeMeasurementListener(homeId);
+        await tibberApiClient.StopRealTimeMeasurementListener(homeId);
 
         _logger.LogInformation("Real Time Measurement listener stopped");
     }
