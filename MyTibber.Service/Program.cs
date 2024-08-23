@@ -25,6 +25,7 @@ internal class Program
             return new TibberApiClient("hHYECYJUfCcxUbfFasjYmi4t59TDLFPPkE2Ox9yL214", userAgent);
         });
 
+        builder.Services.AddMemoryCache();
         builder.Services.AddHttpClient();
 
         using IHost host = builder.Build();

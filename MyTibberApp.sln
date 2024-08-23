@@ -5,7 +5,7 @@ VisualStudioVersion = 17.9.34723.18
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MyTibberApp", "MyTibberApp\MyTibberApp.csproj", "{4F22A216-9054-4DFD-B737-CBDBE315CBFE}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MyTibber.Service", "MyTibber.Service\MyTibber.Service.csproj", "{49295D23-4D1D-4A06-A642-9B1F580E600E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MyTibber.Service", "MyTibber.Service\MyTibber.Service.csproj", "{49295D23-4D1D-4A06-A642-9B1F580E600E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
