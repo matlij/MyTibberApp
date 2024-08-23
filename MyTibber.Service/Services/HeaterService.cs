@@ -1,7 +1,4 @@
 ﻿using Microsoft.Extensions.Logging;
-using MyTibber.Service.Models;
-using System.Net.Http.Json;
-using System.Text.Json;
 using Tibber.Sdk;
 
 namespace MyTibber.Service.Services;

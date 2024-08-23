@@ -1,6 +1,8 @@
 ﻿using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using MyTibber.Service.Models;
+using MyTibber.Service.Options;
 using System.Net.Http.Json;
 using System.Text.Json;
 
@@ -11,13 +13,20 @@ public class HeaterReposiory
     private const int HEAT_POINT = 47011;
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly IMemoryCache _memoryCache;
+    private readonly UpLinkCredentialsOptions _upLinkCredentialsOptions;
     private readonly ILogger<HeaterReposiory> _logger;
 
-    public HeaterReposiory(IHttpClientFactory httpClientFactory, IMemoryCache cache, ILogger<HeaterReposiory> logger)
+    public HeaterReposiory(IHttpClientFactory httpClientFactory, IMemoryCache cache, IOptions<UpLinkCredentialsOptions> upLinkCredentialsOptions, ILogger<HeaterReposiory> logger)
     {
-        _httpClientFactory = httpClientFactory;
-        _memoryCache = cache;
-        _logger = logger;
+        if (upLinkCredentialsOptions is null)
+        {
+            throw new ArgumentNullException(nameof(upLinkCredentialsOptions));
+        }
+
+        _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
+        _memoryCache = cache ?? throw new ArgumentNullException(nameof(cache));
+        _upLinkCredentialsOptions = upLinkCredentialsOptions.Value;
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
     public async Task<DataPointDto> GetCurrentHeat()
@@ -77,12 +86,12 @@ public class HeaterReposiory
         HttpClient httpClient = GetHttpClient();
 
         var postData = new Dictionary<string, string>
-            {
-                { "client_id", "My-Uplink-Web" },
-                { "username", "Me@mattiasmorell.se" },
-                { "password", "" },
-                { "grant_type", "password" }
-            };
+        {
+            { "client_id", "My-Uplink-Web" },
+            { "username", _upLinkCredentialsOptions.Username },
+            { "password", _upLinkCredentialsOptions.Password },
+            { "grant_type", "password" }
+        };
 
         var content = new FormUrlEncodedContent(postData);
 

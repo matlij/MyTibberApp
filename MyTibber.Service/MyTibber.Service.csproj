@@ -15,4 +15,10 @@
 		<PackageReference Include="Tibber.Sdk" Version="0.5.1-beta" />
 	</ItemGroup>
 
+	<ItemGroup>
+	  <None Update="appsettings.local.json">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </None>
+	</ItemGroup>
+
 </Project>
