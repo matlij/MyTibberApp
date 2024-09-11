@@ -13,7 +13,7 @@ namespace MyTibber.CostPlanner
             var tibbeApiClient = new TibberApiClient("hHYECYJUfCcxUbfFasjYmi4t59TDLFPPkE2Ox9yL214", userAgent);
             var repository = new EnergyRepository(tibbeApiClient);
 
-            var prices = await repository.GetTomorrowsEnergyPrices();
+            var prices = await repository.GetTodaysEnergyPrices();
             
             var priceStats = CalculatePriceStatistics(prices);
 
@@ -44,8 +44,8 @@ namespace MyTibber.CostPlanner
 
         static int CalculateSettingAdjustment(decimal price, PriceStatistics priceStats)
         {
-            if (price <= priceStats.LowThreshold) return 2;       // Very low price: increase setting by 2
-            else if (price < priceStats.AveragePrice) return 1;  // Below average price: increase setting by 1
+            if (price <= priceStats.LowThreshold) return 1;       // Very low price: increase setting by 2
+            else if (price < priceStats.AveragePrice) return 0;  // Below average price: increase setting by 1
             else if (price < priceStats.HighThreshold) return 0;  // Average price: no change
             else if (price < priceStats.MaxPrice) return -1; // High price: decrease setting by 1
             else return -2;                    // Very high price: decrease setting by 2
