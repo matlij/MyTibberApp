@@ -1,4 +1,4 @@
-﻿namespace MyTibber.Service.Options;
+﻿namespace MyTibber.Common.Options;
 
 public class UpLinkCredentialsOptions
 {

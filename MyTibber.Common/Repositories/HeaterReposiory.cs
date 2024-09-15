@@ -1,12 +1,12 @@
 ﻿using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using MyTibber.Service.Models;
-using MyTibber.Service.Options;
+using MyTibber.Common.Models;
+using MyTibber.Common.Options;
 using System.Net.Http.Json;
 using System.Text.Json;
 
-namespace MyTibber.Service.Services;
+namespace MyTibber.Common.Repositories;
 
 public class HeaterReposiory
 {
@@ -41,7 +41,7 @@ public class HeaterReposiory
 
             var response = await httpClient.GetFromJsonAsync<IEnumerable<DataPointDto>>(uri);
 
-            return response?.FirstOrDefault() 
+            return response?.FirstOrDefault()
                 ?? throw new InvalidOperationException($"Failed to get current heat from the my uplink API. URL: {uri}");
         });
 
@@ -122,7 +122,7 @@ public class HeaterReposiory
     private string GetInternalUplinkAbsolutePath()
     {
         const string DEVICE_ID = "emmy-r-208006-20240516-06605519022003-54-10-ec-c4-ca-9a";
-        
+
         return $"v2/devices/{DEVICE_ID}/points";
     }
 }

@@ -1,8 +1,8 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
-using MyTibber.Service.Options;
+using MyTibber.Common.Options;
+using MyTibber.Common.Repositories;
 using MyTibber.Service.Services;
 using System.Net.Http.Headers;
 using Tibber.Sdk;
@@ -15,7 +15,7 @@ internal class Program
     {
         HostApplicationBuilder builder = Host.CreateApplicationBuilder(args);
 
-        builder.Logging.SetMinimumLevel(LogLevel.Debug);
+        //builder.Logging.SetMinimumLevel(LogLevel.Debug);
         builder.Configuration.AddJsonFile("appsettings.local.json");
 
         builder.Services.AddHostedService<ConsumptionHost>();

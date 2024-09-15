@@ -1,6 +1,6 @@
 ﻿using System.Text.Json.Serialization;
 
-namespace MyTibber.Service.Models;
+namespace MyTibber.Common.Models;
 
 internal class Token
 {

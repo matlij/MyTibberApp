@@ -1,4 +1,4 @@
-﻿namespace MyTibber.Service.Models;
+﻿namespace MyTibber.Common.Models;
 
 public class UpdateDataPointDto
 {

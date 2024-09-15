@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
+using MyTibber.Common.Repositories;
 using Tibber.Sdk;
 
 namespace MyTibber.Service.Services;
@@ -20,17 +21,17 @@ public class HeaterService
 
     public async Task AdjustHeat(decimal accumulatedConsumptionLastHour)
     {
-        const decimal HOURLY_POWER_LIMIT = 1m;
+        const decimal KWH_LIMIT = 2m;
 
         var heat = await _heaterReposiory.GetCurrentHeat();
 
         var currentHeatIsBelowZero = heat.Value < 0;
 
-        if (accumulatedConsumptionLastHour >= HOURLY_POWER_LIMIT && !currentHeatIsBelowZero)
+        if (accumulatedConsumptionLastHour >= KWH_LIMIT && !currentHeatIsBelowZero)
         {
             await _heaterReposiory.UpdateHeat(-2);
         }
-        else if (accumulatedConsumptionLastHour < HOURLY_POWER_LIMIT && currentHeatIsBelowZero)
+        else if (accumulatedConsumptionLastHour < KWH_LIMIT && currentHeatIsBelowZero)
         {
             await _heaterReposiory.UpdateHeat(0);
         }

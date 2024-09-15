@@ -16,6 +16,10 @@
 	</ItemGroup>
 
 	<ItemGroup>
+	  <ProjectReference Include="..\MyTibber.Common\MyTibber.Common.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
 	  <None Update="appsettings.local.json">
 	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 	  </None>
