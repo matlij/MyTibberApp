@@ -1,82 +1,47 @@
-﻿using System.Text.Json;
+﻿using Microsoft.Extensions.Caching.Memory;
+using MyTibber.Common.Interfaces;
+using System.Collections.ObjectModel;
+using System.Text.Json;
 using Tibber.Sdk;
 
 namespace MyTibber.Common.Repositories;
 
-public class StubbedEnergyRepository
+public class EnergyRepository(TibberApiClient tibberApiClient, IMemoryCache cache) : IEnergyRepository
 {
-    public Task<IEnumerable<Price>> GetTomorrowsEnergyPrices() =>
-        Task.FromResult(GenerateStubPrices(DateTime.Today.AddDays(1)));
-
-    public Task<IEnumerable<Price>> GetTodaysEnergyPrices() =>
-        Task.FromResult(GenerateStubPrices(DateTime.Today));
-
-    private IEnumerable<Price> GenerateStubPrices(DateTime date)
-    {
-        var prices = new List<Price>();
-        var random = new Random(date.DayOfYear); // Use day of year as seed for consistent randomness
-
-        for (int hour = 0; hour < 24; hour++)
-        {
-            var basePrice = 0.15m + (decimal)random.NextDouble() * 0.2m; // Random price between 0.15 and 0.35
-            var startsAt = date.Date.AddHours(hour);
-
-            prices.Add(new Price
-            {
-                Total = Math.Round(basePrice, 4),
-                Energy = Math.Round(basePrice * 0.7m, 4),
-                Tax = Math.Round(basePrice * 0.3m, 4),
-                StartsAt = startsAt.ToString("yyyy-MM-ddTHH:mm:ss.fffzzz"),
-                Currency = "SEK",
-                Level = GetPriceLevel(basePrice)
-            });
-        }
-
-        return prices;
-    }
-
-    private PriceLevel GetPriceLevel(decimal price)
-    {
-        if (price < 0.2m) return PriceLevel.VeryExpensive;
-        if (price < 0.25m) return PriceLevel.Cheap;
-        if (price < 0.3m) return PriceLevel.Normal;
-        if (price < 0.35m) return PriceLevel.Expensive;
-        return PriceLevel.VeryExpensive;
-    }
-}
-
-public class EnergyRepository
-{
-    private readonly TibberApiClient _tibberApiClient;
-
-    public EnergyRepository(TibberApiClient tibberApiClient)
-    {
-        _tibberApiClient = tibberApiClient;
-    }
-
-    public Task<IEnumerable<Price>> GetTomorrowsEnergyPrices() =>
+    public Task<ReadOnlyCollection<Price>> GetTomorrowsEnergyPrices() =>
         GetEnergyPrices(PriceType.Tomorrow);
 
-    public Task<IEnumerable<Price>> GetTodaysEnergyPrices() =>
+    public Task<ReadOnlyCollection<Price>> GetTodaysEnergyPrices() =>
         GetEnergyPrices(PriceType.Today);
 
-    private async Task<IEnumerable<Price>> GetEnergyPrices(PriceType priceType)
+    private async Task<ReadOnlyCollection<Price>> GetEnergyPrices(PriceType priceType)
     {
-        var homeId = await GetHomeId();
-        var customQuery = BuildCustomQuery(homeId, priceType);
-        var result = await _tibberApiClient.Query(customQuery);
+        var cacheKey = GetCacheKey(priceType);
 
-        return GetPricesFromResult(result, priceType) ??
-            throw new TibberApiException(GetErrorMessage(result.Data, priceType));
+        var result = await cache.GetOrCreateAsync(cacheKey, async cacheEntry =>
+        {
+            cacheEntry.AbsoluteExpiration = new DateTimeOffset(cacheKey, TimeOnly.MaxValue, TimeSpan.Zero);
+
+            var homeId = await GetHomeId();
+            var query = BuildEnergyPricesQuery(homeId);
+            var result = await tibberApiClient.Query(query);
+
+            return GetPricesFromResult(result, priceType) ??
+                throw new TibberApiException(GetTibberApiErrorMessage(result.Data));
+        });
+
+        return result ?? ReadOnlyCollection<Price>.Empty;
     }
 
     private async Task<Guid> GetHomeId()
     {
-        var basicData = await _tibberApiClient.GetBasicData();
-        return basicData.Data.Viewer.Homes.First().Id.Value;
+        var basicData = await tibberApiClient.GetBasicData();
+
+        return basicData.Data.Viewer.Homes.FirstOrDefault()?.Id.GetValueOrDefault() ??
+            throw new TibberApiException(GetTibberApiErrorMessage(basicData.Data));
     }
 
-    private string BuildCustomQuery(Guid homeId, PriceType priceType)
+    private static string BuildEnergyPricesQuery(Guid homeId)
     {
         var priceInfoBuilder = new PriceInfoQueryBuilder()
             .WithToday(new PriceQueryBuilder().WithAllScalarFields())
@@ -102,20 +67,29 @@ public class EnergyRepository
         return customQueryBuilder.Build();
     }
 
-    private IEnumerable<Price>? GetPricesFromResult(TibberApiQueryResponse result, PriceType priceType)
+    private static DateOnly GetCacheKey(PriceType priceType)
     {
         return priceType switch
+        {
+            PriceType.Today => DateOnly.FromDateTime(DateTime.Now),
+            PriceType.Tomorrow => DateOnly.FromDateTime(DateTime.Now.AddDays(1)),
+            _ => throw new ArgumentOutOfRangeException(nameof(priceType), priceType, null),
+        };
+    }
+
+    private static ReadOnlyCollection<Price>? GetPricesFromResult(TibberApiQueryResponse result, PriceType priceType)
+    {
+        var prices = priceType switch
         {
             PriceType.Today => result.Data.Viewer.Home?.CurrentSubscription?.PriceInfo?.Today,
             PriceType.Tomorrow => result.Data.Viewer.Home?.CurrentSubscription?.PriceInfo?.Tomorrow,
             _ => throw new ArgumentOutOfRangeException(nameof(priceType), priceType, null)
         };
+
+        return prices != null ? new ReadOnlyCollection<Price>(prices.ToList()) : null;
     }
 
-    private string GetErrorMessage(dynamic data, PriceType priceType)
-    {
-        return $"Error getting {priceType.ToString().ToLower()} energy prices. Some data in the response is missing:\n{JsonSerializer.Serialize(data, new JsonSerializerOptions { WriteIndented = true })}";
-    }
+    private static string GetTibberApiErrorMessage(object data) => $"Get data from Tibber failed. Some data in the response is missing:\n{JsonSerializer.Serialize(data, new JsonSerializerOptions { WriteIndented = true })}";
 
     private enum PriceType
     {

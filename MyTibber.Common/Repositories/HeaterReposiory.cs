@@ -11,6 +11,7 @@ namespace MyTibber.Common.Repositories;
 public class HeaterReposiory
 {
     private const int HEAT_POINT = 47011;
+
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly IMemoryCache _memoryCache;
     private readonly UpLinkCredentialsOptions _upLinkCredentialsOptions;

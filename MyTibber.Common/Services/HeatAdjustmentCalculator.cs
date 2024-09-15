@@ -1,29 +1,30 @@
 ﻿using MyTibber.Common.Interfaces;
+using MyTibber.Common.Models;
+using MyTibber.Common.Repositories;
+using System.Collections.Frozen;
+using System.Collections.ObjectModel;
+using System.Security.Cryptography;
 using Tibber.Sdk;
 
-namespace MyTibber.CostPlanner
+namespace MyTibber.Common.Services
 {
     public class HeatAdjustmentCalculator
     {
-        private readonly IEnergyRepository _energyRepository;
-
-        public HeatAdjustmentCalculator(IEnergyRepository energyRepository)
+        public static HeatAdjustment CalculateEnergyPriceAdjustment(ReadOnlyCollection<Price> prices, int hour)
         {
-            _energyRepository = energyRepository;
+            if (hour < 0 || hour > 24)
+                throw new ArgumentException($"Value of hour ({hour}) must be between 0 and 24.");
+
+            var adjustments = CalculateEnergyPriceAdjustments(prices);
+
+            return adjustments.FirstOrDefault(a => a.Time.TimeOfDay.Hours == hour)
+                ?? throw new ArgumentException($"Couldn't find price adjustment for hour: {hour}");
         }
 
-        public async Task<HeatAdjustment?> CalculateHeatAdjustment(int hour)
+        public static IEnumerable<HeatAdjustment> CalculateEnergyPriceAdjustments(ReadOnlyCollection<Price> prices)
         {
-            var adjustments = await CalculateHeatAdjustments();
-
-            return adjustments.FirstOrDefault(a => a.Time.TimeOfDay.Hours == hour);
-        }
-
-        public async Task<IEnumerable<HeatAdjustment>> CalculateHeatAdjustments()
-        {
-            var prices = (await _energyRepository.GetTodaysEnergyPrices()).ToList();
-
             var adjustments = new List<HeatAdjustment>();
+
             for (int i = 0; i < prices.Count; i++)
             {
                 var price = prices[i];
@@ -55,7 +56,7 @@ namespace MyTibber.CostPlanner
             _ => 0
         };
 
-        private static int GetLookAheadModifier(List<Price> prices, int currentIndex)
+        private static int GetLookAheadModifier(ReadOnlyCollection<Price> prices, int currentIndex)
         {
             var lookAheadHours = 2;
             if (currentIndex + lookAheadHours >= prices.Count) return 0;
@@ -78,7 +79,7 @@ namespace MyTibber.CostPlanner
                 var next = smoothedAdjustments[i + 1].Adjustment;
 
                 // If current adjustment is different from both neighbors, smooth it
-                if ((current > prev && current > next) || (current < prev && current < next))
+                if (current > prev && current > next || current < prev && current < next)
                 {
                     smoothedAdjustments[i].Adjustment = (prev + next) / 2;
                 }
