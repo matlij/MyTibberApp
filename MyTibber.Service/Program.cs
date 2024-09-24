@@ -37,7 +37,6 @@ internal class Program
         builder.Services.Configure<UpLinkCredentialsOptions>(
             builder.Configuration.GetSection(UpLinkCredentialsOptions.UpLinkCredentials));
 
-        builder.Services.AddMemoryCache();
         builder.Services.AddHttpClient();
 
         using IHost host = builder.Build();

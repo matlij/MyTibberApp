@@ -1,5 +1,4 @@
-﻿using Microsoft.Extensions.Caching.Memory;
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using MyTibber.Common.Models;
 using MyTibber.Common.Options;
@@ -8,43 +7,23 @@ using System.Text.Json;
 
 namespace MyTibber.Common.Repositories;
 
-public class HeaterReposiory
+public class HeaterReposiory(IHttpClientFactory httpClientFactory, IOptions<UpLinkCredentialsOptions> upLinkCredentialsOptions, ILogger<HeaterReposiory> logger)
 {
     private const int HEAT_POINT = 47011;
 
-    private readonly IHttpClientFactory _httpClientFactory;
-    private readonly IMemoryCache _memoryCache;
-    private readonly UpLinkCredentialsOptions _upLinkCredentialsOptions;
-    private readonly ILogger<HeaterReposiory> _logger;
-
-    public HeaterReposiory(IHttpClientFactory httpClientFactory, IMemoryCache cache, IOptions<UpLinkCredentialsOptions> upLinkCredentialsOptions, ILogger<HeaterReposiory> logger)
-    {
-        if (upLinkCredentialsOptions is null)
-        {
-            throw new ArgumentNullException(nameof(upLinkCredentialsOptions));
-        }
-
-        _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
-        _memoryCache = cache ?? throw new ArgumentNullException(nameof(cache));
-        _upLinkCredentialsOptions = upLinkCredentialsOptions.Value;
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-    }
+    private readonly IHttpClientFactory _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
+    private readonly UpLinkCredentialsOptions _upLinkCredentialsOptions = upLinkCredentialsOptions.Value;
+    private readonly ILogger<HeaterReposiory> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
     public async Task<DataPointDto> GetCurrentHeat()
     {
-        var result = await _memoryCache.GetOrCreateAsync(HEAT_POINT, async cacheEntry =>
-        {
-            cacheEntry.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(30);
+        var httpClient = await GetHttpClientWithAuthHeader();
 
-            var httpClient = await GetHttpClientWithAuthHeader();
+        var uri = $"{GetInternalUplinkAbsolutePath()}?parameters={HEAT_POINT}";
 
-            var uri = $"{GetInternalUplinkAbsolutePath()}?parameters={HEAT_POINT}";
+        var response = await httpClient.GetFromJsonAsync<IEnumerable<DataPointDto>>(uri);
 
-            var response = await httpClient.GetFromJsonAsync<IEnumerable<DataPointDto>>(uri);
-
-            return response?.FirstOrDefault()
-                ?? throw new InvalidOperationException($"Failed to get current heat from the my uplink API. URL: {uri}");
-        });
+        var result = response?.FirstOrDefault() ?? throw new InvalidOperationException($"Failed to get current heat from the my uplink API. URL: {uri}");
 
         return result ?? throw new InvalidOperationException($"Failed to get current heat.");
     }
@@ -53,7 +32,7 @@ public class HeaterReposiory
     {
         if (value < -10 || value > 10)
         {
-            throw new ArgumentException($"Invalid value: {value}", nameof(value));
+            throw new ArgumentException($"Invalid value: {value}. Must be between -10 and 10", nameof(value));
         }
 
         var httpClient = await GetHttpClientWithAuthHeader();
@@ -76,8 +55,6 @@ public class HeaterReposiory
 
         var responseContent = await response.Content.ReadAsStringAsync();
         _logger.LogInformation($"Successfully set heater temprature to {value}. Response: {responseContent}");
-
-        _memoryCache.Remove(HEAT_POINT);
 
         return true;
     }
@@ -120,7 +97,7 @@ public class HeaterReposiory
         return httpClient;
     }
 
-    private string GetInternalUplinkAbsolutePath()
+    private static string GetInternalUplinkAbsolutePath()
     {
         const string DEVICE_ID = "emmy-r-208006-20240516-06605519022003-54-10-ec-c4-ca-9a";
 

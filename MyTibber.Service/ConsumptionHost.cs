@@ -13,7 +13,7 @@ public sealed class ConsumptionHost(
 
     public async Task StartAsync(CancellationToken cancellationToken)
     {
-        _logger.LogInformation($"{nameof(ConsumptionHost.StartAsync)} has been called.");
+        _logger.LogInformation($"{nameof(StartAsync)} has been called.");
 
         var validateRealtimeDeviceResult = await tibberApiClient.ValidateRealtimeDevice(cancellationToken);
 

@@ -6,7 +6,7 @@ using Tibber.Sdk;
 
 namespace MyTibber.Common.Repositories;
 
-public class EnergyRepository(TibberApiClient tibberApiClient, IMemoryCache cache) : IEnergyRepository
+public class EnergyRepository(TibberApiClient tibberApiClient) : IEnergyRepository
 {
     public Task<ReadOnlyCollection<Price>> GetTomorrowsEnergyPrices() =>
         GetEnergyPrices(PriceType.Tomorrow);
@@ -16,19 +16,12 @@ public class EnergyRepository(TibberApiClient tibberApiClient, IMemoryCache cach
 
     private async Task<ReadOnlyCollection<Price>> GetEnergyPrices(PriceType priceType)
     {
-        var cacheKey = GetCacheKey(priceType);
+        var homeId = await GetHomeId();
+        var query = BuildEnergyPricesQuery(homeId);
+        var queryResponse = await tibberApiClient.Query(query);
 
-        var result = await cache.GetOrCreateAsync(cacheKey, async cacheEntry =>
-        {
-            cacheEntry.AbsoluteExpiration = new DateTimeOffset(cacheKey, TimeOnly.MaxValue, TimeSpan.Zero);
-
-            var homeId = await GetHomeId();
-            var query = BuildEnergyPricesQuery(homeId);
-            var result = await tibberApiClient.Query(query);
-
-            return GetPricesFromResult(result, priceType) ??
-                throw new TibberApiException(GetTibberApiErrorMessage(result.Data));
-        });
+        var result = GetPricesFromQueryResponse(queryResponse, priceType) ??
+            throw new TibberApiException(GetTibberApiErrorMessage(queryResponse.Data));
 
         return result ?? ReadOnlyCollection<Price>.Empty;
     }
@@ -77,7 +70,7 @@ public class EnergyRepository(TibberApiClient tibberApiClient, IMemoryCache cach
         };
     }
 
-    private static ReadOnlyCollection<Price>? GetPricesFromResult(TibberApiQueryResponse result, PriceType priceType)
+    private static ReadOnlyCollection<Price>? GetPricesFromQueryResponse(TibberApiQueryResponse result, PriceType priceType)
     {
         var prices = priceType switch
         {
