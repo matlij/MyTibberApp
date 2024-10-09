@@ -1,0 +1,6 @@
+@MyTibber.WebApi_HostAddress = http://localhost:5159
+
+GET {{MyTibber.WebApi_HostAddress}}/heatadjustment/
+Accept: application/json
+
+###
