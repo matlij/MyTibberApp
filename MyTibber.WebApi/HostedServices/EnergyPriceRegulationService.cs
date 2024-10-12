@@ -1,11 +1,7 @@
 ﻿using Cronos;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 using MyTibber.Common.Interfaces;
 using MyTibber.Common.Repositories;
 using MyTibber.Common.Services;
-using System.Text.Json;
-using Tibber.Sdk;
 
 namespace MyTibber.WebApi.HostedServices;
 
@@ -23,7 +19,7 @@ public sealed class EnergyPriceRegulationService : BackgroundService
         _services = services;
         _logger = logger;
 
-        _cron = CronExpression.Parse(_schedule, CronFormat.IncludeSeconds);
+        _cron = CronExpression.Parse(_schedule);
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -68,6 +64,6 @@ public sealed class EnergyPriceRegulationService : BackgroundService
         _logger.LogInformation($"{DateTime.Now} - Setting heat to {priceAdjustment.Adjustment}. Current energy price {priceAdjustment.Price} SEK ({priceAdjustment.Level}).");
 
         var heaterReposiory = scope.ServiceProvider.GetRequiredService<HeaterReposiory>();
-        await heaterReposiory.UpdateHeat(priceAdjustment.Adjustment);
+        //await heaterReposiory.UpdateHeat(priceAdjustment.Adjustment);
     }
 }
