@@ -39,7 +39,7 @@ public sealed class ConsumptionObserver(ILogger<ConsumptionObserver> logger, Hea
     {
         var prices = await energyRepository.GetTodaysEnergyPrices();
 
-        var priceAdjustment = HeatAdjustmentCalculator.CalculateEnergyPriceAdjustment(prices, DateTime.Now.Hour);
+        var priceAdjustment = HeatRegulator.CalculateHeatAdjustments(prices, DateTime.Now.Hour);
         var effectTaxAdjustment = CalculatEffectTaxAdjustment(accumulatedConsumptionLastHour);
 
         var heatAdjustment = priceAdjustment.Adjustment + effectTaxAdjustment;

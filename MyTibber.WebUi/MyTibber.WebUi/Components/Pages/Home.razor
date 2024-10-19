@@ -1,0 +1,63 @@
+﻿@page "/"
+@using MyTibber.Common.Interfaces
+@using MyTibber.Common.Models
+@using MyTibber.Common.Services
+@attribute [StreamRendering]
+@inject IEnergyRepository EnergyRepository
+
+<PageTitle>Elprisreglering</PageTitle>
+
+<h1>Elprisreglering</h1>
+
+<p>Hur värmen kommer justeras baserat på elpriset.</p>
+
+@if (heatAdjustments == null)
+{
+    <p><em>Laddar...</em></p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Datum</th>
+                <th>Pris (sek)</th>
+                <th>Prisnivå</th>
+                <th>Värmereglering</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var adjustment in heatAdjustments)
+            {
+                <tr>
+                    <td>@adjustment.Time.ToString()</td>
+                    <td>@Math.Round(adjustment.Price, 2) SEK</td>
+                    <td>@adjustment.Level.ToString()</td>
+                    <td>@adjustment.DayPriceLevel</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private IEnumerable<HeatAdjustment>? heatAdjustments;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var result = new List<HeatAdjustment>();
+
+        var todaysPrices = await EnergyRepository.GetTodaysEnergyPrices();
+        result.AddRange(HeatRegulator.CalculateHeatAdjustments(todaysPrices));
+
+        if (DateTime.Now.Hour > 13)
+        {
+            var tomorrowsPrices = await EnergyRepository.GetTomorrowsEnergyPrices();
+
+            result.AddRange(HeatRegulator.CalculateHeatAdjustments(tomorrowsPrices));
+        }
+
+        heatAdjustments = result;
+    }
+}
+

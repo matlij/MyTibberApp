@@ -1,5 +1,6 @@
 ﻿using Cronos;
 using MyTibber.Common.Interfaces;
+using MyTibber.Common.Models;
 using MyTibber.Common.Repositories;
 using MyTibber.Common.Services;
 
@@ -52,18 +53,30 @@ public sealed class EnergyPriceRegulationService : BackgroundService
     private async Task DoWorkAsync()
     {
         _logger.LogInformation($"{nameof(EnergyPriceRegulationService)} is working.");
-        
+
         using var scope = _services.CreateScope();
 
         var energyRepository = scope.ServiceProvider.GetRequiredService<IEnergyRepository>();
 
         var prices = await energyRepository.GetTodaysEnergyPrices();
 
-        var priceAdjustment = HeatAdjustmentCalculator.CalculateEnergyPriceAdjustment(prices, DateTime.Now.Hour);
+        var priceAdjustment = HeatRegulator.CalculateHeatAdjustments(prices, DateTime.Now.Hour);
+        var newHeat = GetNewHeat(priceAdjustment);
 
-        _logger.LogInformation($"{DateTime.Now} - Setting heat to {priceAdjustment.Adjustment}. Current energy price {priceAdjustment.Price} SEK ({priceAdjustment.Level}).");
+        _logger.LogInformation($"{DateTime.Now} - Setting heat to {newHeat}. Current energy price {priceAdjustment.Price} SEK ({priceAdjustment.Level}). Price level considering todays prices: {priceAdjustment.DayPriceLevel}");
 
         var heaterReposiory = scope.ServiceProvider.GetRequiredService<HeaterReposiory>();
         //await heaterReposiory.UpdateHeat(priceAdjustment.Adjustment);
+    }
+
+    private static int GetNewHeat(HeatAdjustment priceAdjustment)
+    {
+        return priceAdjustment.DayPriceLevel switch
+        {
+            DayPriceLevel.Normal => 0,
+            DayPriceLevel.Low => 2,
+            DayPriceLevel.High => -3,
+            _ => 0,
+        };
     }
 }

@@ -7,7 +7,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MyTibber.Service", "MyTibbe
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MyTibber.Common", "MyTibber.Common\MyTibber.Common.csproj", "{05EC861B-A843-4E32-9A76-5742B4E5B175}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MyTibber.WebApi", "MyTibber.WebApi\MyTibber.WebApi.csproj", "{91E510A6-A15A-4972-979A-48AA696EB12B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MyTibber.WebApi", "MyTibber.WebApi\MyTibber.WebApi.csproj", "{91E510A6-A15A-4972-979A-48AA696EB12B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MyTibber.WebUi", "MyTibber.WebUi\MyTibber.WebUi\MyTibber.WebUi.csproj", "{0C3335A8-268A-46FC-9EC9-4CEA5A58640C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MyTibber.WebUi.Client", "MyTibber.WebUi\MyTibber.WebUi.Client\MyTibber.WebUi.Client.csproj", "{A886C838-931D-40DD-BBF0-356306E44926}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -27,6 +31,14 @@ Global
 		{91E510A6-A15A-4972-979A-48AA696EB12B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{91E510A6-A15A-4972-979A-48AA696EB12B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{91E510A6-A15A-4972-979A-48AA696EB12B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0C3335A8-268A-46FC-9EC9-4CEA5A58640C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0C3335A8-268A-46FC-9EC9-4CEA5A58640C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0C3335A8-268A-46FC-9EC9-4CEA5A58640C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0C3335A8-268A-46FC-9EC9-4CEA5A58640C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A886C838-931D-40DD-BBF0-356306E44926}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A886C838-931D-40DD-BBF0-356306E44926}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A886C838-931D-40DD-BBF0-356306E44926}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A886C838-931D-40DD-BBF0-356306E44926}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -1,12 +1,12 @@
 using MyTibber.Common.Interfaces;
 using MyTibber.Common.Options;
 using MyTibber.Common.Repositories;
-using MyTibber.Common.Services;
-using MyTibber.WebApi.HostedServices;
+using MyTibber.WebUi.Client.Pages;
+using MyTibber.WebUi.Components;
 using System.Net.Http.Headers;
 using Tibber.Sdk;
 
-namespace MyTibber.WebApi
+namespace MyTibber.WebUi
 {
     public class Program
     {
@@ -14,24 +14,36 @@ namespace MyTibber.WebApi
         {
             var builder = WebApplication.CreateBuilder(args);
 
-            builder.Configuration.AddUserSecrets<Program>();
+            // Add services to the container.
+            builder.Services.AddRazorComponents()
+                .AddInteractiveServerComponents()
+                .AddInteractiveWebAssemblyComponents();
 
             RegisterDependencies(builder);
 
-            builder.Services.AddAuthorization();
-            builder.Services.AddHostedService<EnergyPriceRegulationService>();
-
             var app = builder.Build();
 
-            app.UseHttpsRedirection();
-            app.UseAuthorization();
-
-            app.MapGet("/heatadjustment", async (HttpContext httpContext, IEnergyRepository energyRepository) =>
+            // Configure the HTTP request pipeline.
+            if (app.Environment.IsDevelopment())
             {
-                var prices = await energyRepository.GetTodaysEnergyPrices();
+                app.UseWebAssemblyDebugging();
+            }
+            else
+            {
+                app.UseExceptionHandler("/Error");
+                // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
+                app.UseHsts();
+            }
 
-                return HeatRegulator.CalculateHeatAdjustments(prices);
-            });
+            app.UseHttpsRedirection();
+
+            app.UseStaticFiles();
+            app.UseAntiforgery();
+
+            app.MapRazorComponents<App>()
+                .AddInteractiveServerRenderMode()
+                .AddInteractiveWebAssemblyRenderMode()
+                .AddAdditionalAssemblies(typeof(Client._Imports).Assembly);
 
             app.Run();
         }
