@@ -1,7 +1,7 @@
 using MyTibber.Common.Interfaces;
 using MyTibber.Common.Options;
 using MyTibber.Common.Repositories;
-using MyTibber.WebUi.Client.Pages;
+using MyTibber.WebApi.HostedServices;
 using MyTibber.WebUi.Components;
 using System.Net.Http.Headers;
 using Tibber.Sdk;
@@ -18,6 +18,8 @@ namespace MyTibber.WebUi
             builder.Services.AddRazorComponents()
                 .AddInteractiveServerComponents()
                 .AddInteractiveWebAssemblyComponents();
+
+            builder.Services.AddHostedService<EnergyPriceRegulatorService>();
 
             RegisterDependencies(builder);
 
