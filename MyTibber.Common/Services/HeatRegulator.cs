@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using MyTibber.Common.Models;
+﻿using MyTibber.Common.Models;
 using Tibber.Sdk;
 
 namespace MyTibber.Common.Services;
@@ -27,25 +23,24 @@ public class HeatRegulator
             Time = DateTime.Parse(p.StartsAt),
             Price = p.Total ?? 0,
             Level = p.Level ?? PriceLevel.Normal,
-        });
+        }).ToList();
 
         var average = prices.Average(p => p.Total);
+        var highThreshold = 2m * average;
+        var lowThreshold = 0.5m * average;
 
-        var highThreshold = 2.5m * average;
+        foreach (var a in adjustments)
+        {
+            if (a.Price > highThreshold && (a.Level == PriceLevel.Expensive || a.Level == PriceLevel.VeryExpensive))
+            {
+                a.DayPriceLevel = DayPriceLevel.High;
+            }
 
-        adjustments
-            .Where(a => a.Price > highThreshold && (a.Level == PriceLevel.Expensive || a.Level == PriceLevel.VeryExpensive))
-            .OrderByDescending(a => a.Price)
-            .Take(4).ToList()
-            .ForEach(a => a.DayPriceLevel = DayPriceLevel.High);
-
-        var highAdjustments = adjustments.Count(a => a.DayPriceLevel == DayPriceLevel.High);
-
-        adjustments
-            .Where(a => a.Price > average && (a.Level == PriceLevel.Cheap || a.Level == PriceLevel.VeryCheap))
-            .OrderBy(a => a.Price)
-            .Take(highAdjustments).ToList()
-            .ForEach(a => a.DayPriceLevel = DayPriceLevel.Low);
+            else if (a.Price < lowThreshold && (a.Level == PriceLevel.Cheap || a.Level == PriceLevel.VeryCheap))
+            {
+                a.DayPriceLevel = DayPriceLevel.Low;
+            }
+        }
 
         return adjustments;
     }
