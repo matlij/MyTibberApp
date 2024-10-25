@@ -5,6 +5,7 @@ using Microsoft.Extensions.Logging;
 using MyTibber.Common.Interfaces;
 using MyTibber.Common.Options;
 using MyTibber.Common.Repositories;
+using MyTibber.Service.HostedServices;
 using System.Net.Http.Headers;
 using Tibber.Sdk;
 

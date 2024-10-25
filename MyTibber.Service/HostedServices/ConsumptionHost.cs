@@ -2,7 +2,7 @@
 using Microsoft.Extensions.Logging;
 using Tibber.Sdk;
 
-namespace MyTibber.Service;
+namespace MyTibber.Service.HostedServices;
 
 public sealed class ConsumptionHost(
     ILogger<ConsumptionHost> logger,
