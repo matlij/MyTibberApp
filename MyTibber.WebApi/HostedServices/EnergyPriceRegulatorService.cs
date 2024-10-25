@@ -6,16 +6,16 @@ using MyTibber.Common.Services;
 
 namespace MyTibber.WebApi.HostedServices;
 
-public sealed class EnergyPriceRegulationService : BackgroundService
+public sealed class EnergyPriceRegulatorService : BackgroundService
 {
     private const string _schedule = "0 * * * *"; // every hour
     //private const string _schedule = "*/20 * * * * *";  // every 20 seconds (for testing)
 
     private readonly CronExpression _cron;
     private readonly IServiceProvider _services;
-    private readonly ILogger<EnergyPriceRegulationService> _logger;
+    private readonly ILogger<EnergyPriceRegulatorService> _logger;
 
-    public EnergyPriceRegulationService(IServiceProvider services, ILogger<EnergyPriceRegulationService> logger)
+    public EnergyPriceRegulatorService(IServiceProvider services, ILogger<EnergyPriceRegulatorService> logger)
     {
         _services = services;
         _logger = logger;
@@ -25,7 +25,7 @@ public sealed class EnergyPriceRegulationService : BackgroundService
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        _logger.LogInformation($"{nameof(EnergyPriceRegulationService)} is running.");
+        _logger.LogInformation($"{nameof(EnergyPriceRegulatorService)} is running.");
 
         await DoWorkAsync();
 
@@ -46,13 +46,13 @@ public sealed class EnergyPriceRegulationService : BackgroundService
         }
         catch (OperationCanceledException)
         {
-            _logger.LogInformation($"{nameof(EnergyPriceRegulationService)} is stopping.");
+            _logger.LogInformation($"{nameof(EnergyPriceRegulatorService)} is stopping.");
         }
     }
 
     private async Task DoWorkAsync()
     {
-        _logger.LogInformation($"{nameof(EnergyPriceRegulationService)} is working.");
+        _logger.LogInformation($"{nameof(EnergyPriceRegulatorService)} is working.");
 
         using var scope = _services.CreateScope();
 

@@ -19,7 +19,7 @@ namespace MyTibber.WebApi
             RegisterDependencies(builder);
 
             builder.Services.AddAuthorization();
-            builder.Services.AddHostedService<EnergyPriceRegulationService>();
+            builder.Services.AddHostedService<EnergyPriceRegulatorService>();
 
             var app = builder.Build();
 
