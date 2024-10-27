@@ -9,7 +9,7 @@ namespace MyTibber.WebApi.HostedServices;
 public sealed class EnergyPriceRegulatorService : BackgroundService
 {
     private const string _schedule = "0 * * * *"; // every hour
-    //private const string _schedule = "*/20 * * * * *";  // every 20 seconds (for testing)
+    //private const string _schedule = "*/2 * * * *";  // every 20 seconds (for testing)
 
     private readonly CronExpression _cron;
     private readonly IServiceProvider _services;
@@ -34,11 +34,13 @@ public sealed class EnergyPriceRegulatorService : BackgroundService
             while (!stoppingToken.IsCancellationRequested)
             {
                 var utcNow = DateTime.UtcNow;
-                var nextUtc = _cron.GetNextOccurrence(utcNow) ?? throw new InvalidOperationException($"{nameof(_cron.GetNextOccurrence)} returned null");
+                var next = _cron.GetNextOccurrence(utcNow) 
+                    ?? throw new InvalidOperationException($"{nameof(_cron.GetNextOccurrence)} returned null");
+                var delay = next - utcNow;
 
-                _logger.LogInformation($"Next occurrence (utc): {nextUtc}");
+                _logger.LogInformation($"Next run: {next.ToLocalTime():HH:mm} (in {delay.ToString(@"mm\:ss")})");
 
-                await Task.Delay(nextUtc - utcNow, stoppingToken);
+                await Task.Delay(next - utcNow, stoppingToken);
 
                 await DoWorkAsync();
             }
@@ -66,7 +68,7 @@ public sealed class EnergyPriceRegulatorService : BackgroundService
         _logger.LogInformation($"{DateTime.Now} - Setting heat to {newHeat}. Current energy price {priceAdjustment.Price} SEK ({priceAdjustment.Level}). Price level considering todays prices: {priceAdjustment.DayPriceLevel}");
 
         var heaterReposiory = scope.ServiceProvider.GetRequiredService<HeaterReposiory>();
-        //await heaterReposiory.UpdateHeat(priceAdjustment.Adjustment);
+        await heaterReposiory.UpdateHeat(newHeat);
     }
 
     private static int GetNewHeat(HeatAdjustment priceAdjustment)

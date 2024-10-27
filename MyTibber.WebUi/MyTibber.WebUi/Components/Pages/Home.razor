@@ -50,7 +50,7 @@ else
         var todaysPrices = await EnergyRepository.GetTodaysEnergyPrices();
         result.AddRange(HeatRegulator.CalculateHeatAdjustments(todaysPrices));
 
-        if (DateTime.Now.Hour > 13)
+        if (DateTime.Now.Hour > 14)
         {
             var tomorrowsPrices = await EnergyRepository.GetTomorrowsEnergyPrices();
 
