@@ -12,6 +12,7 @@
     <ProjectReference Include="..\MyTibber.WebUi.Client\MyTibber.WebUi.Client.csproj" />
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="8.0.8" />
 	<PackageReference Include="Cronos" Version="0.8.4" />
+	<PackageReference Include="Microsoft.ApplicationInsights.AspNetCore" Version="2.21.0" />
   </ItemGroup>
 
 </Project>

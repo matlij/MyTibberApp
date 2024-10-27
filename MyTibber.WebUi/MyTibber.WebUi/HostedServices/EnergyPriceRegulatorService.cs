@@ -27,8 +27,6 @@ public sealed class EnergyPriceRegulatorService : BackgroundService
     {
         _logger.LogInformation($"{nameof(EnergyPriceRegulatorService)} is running.");
 
-        await DoWorkAsync();
-
         try
         {
             while (!stoppingToken.IsCancellationRequested)
@@ -44,7 +42,6 @@ public sealed class EnergyPriceRegulatorService : BackgroundService
 
                 await DoWorkAsync();
             }
-
         }
         catch (OperationCanceledException)
         {

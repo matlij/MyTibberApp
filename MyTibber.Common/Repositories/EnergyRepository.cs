@@ -1,5 +1,4 @@
-﻿using Microsoft.Extensions.Caching.Memory;
-using MyTibber.Common.Interfaces;
+﻿using MyTibber.Common.Interfaces;
 using System.Collections.ObjectModel;
 using System.Text.Json;
 using Tibber.Sdk;

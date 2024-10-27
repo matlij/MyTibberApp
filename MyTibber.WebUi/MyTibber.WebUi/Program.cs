@@ -19,6 +19,11 @@ namespace MyTibber.WebUi
                 .AddInteractiveServerComponents()
                 .AddInteractiveWebAssemblyComponents();
 
+            if (!builder.Environment.IsDevelopment())
+            {
+                builder.Services.AddApplicationInsightsTelemetry();
+            }
+
             builder.Services.AddHostedService<EnergyPriceRegulatorService>();
 
             RegisterDependencies(builder);
