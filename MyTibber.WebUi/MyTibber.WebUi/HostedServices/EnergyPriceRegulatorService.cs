@@ -64,7 +64,7 @@ public sealed class EnergyPriceRegulatorService : BackgroundService
 
         _logger.LogInformation($"{DateTime.Now} - Setting heat to {newHeat}. Current energy price {priceAdjustment.Price} SEK ({priceAdjustment.Level}). Price level considering todays prices: {priceAdjustment.DayPriceLevel}");
 
-        var heaterReposiory = scope.ServiceProvider.GetRequiredService<HeaterReposiory>();
+        var heaterReposiory = scope.ServiceProvider.GetRequiredService<HeatpumpReposiory>();
         await heaterReposiory.UpdateHeat(newHeat);
     }
 

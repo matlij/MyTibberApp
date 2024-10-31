@@ -23,7 +23,7 @@ internal class Program
         builder.Services.AddHostedService<ConsumptionHost>();
         builder.Services.AddScoped<IObserver<RealTimeMeasurement>, ConsumptionObserver>();
         builder.Services.AddScoped<IEnergyRepository, EnergyRepository>();
-        builder.Services.AddScoped<HeaterReposiory>();
+        builder.Services.AddScoped<HeatpumpReposiory>();
         builder.Services.AddScoped(s =>
         {
             var accessToken = builder.Configuration["TibberApiClient:AccessToken"];

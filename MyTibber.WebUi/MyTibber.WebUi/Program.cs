@@ -60,7 +60,7 @@ namespace MyTibber.WebUi
             builder.Services.AddHttpClient();
 
             builder.Services.AddScoped<IEnergyRepository, EnergyRepository>();
-            builder.Services.AddScoped<HeaterReposiory>();
+            builder.Services.AddScoped<HeatpumpReposiory>();
             builder.Services.AddScoped(s =>
             {
                 var accessToken = builder.Configuration["TibberApiClient:AccessToken"];

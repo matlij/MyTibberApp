@@ -7,13 +7,13 @@ using System.Text.Json;
 
 namespace MyTibber.Common.Repositories;
 
-public class HeaterReposiory(IHttpClientFactory httpClientFactory, IOptions<UpLinkCredentialsOptions> upLinkCredentialsOptions, ILogger<HeaterReposiory> logger)
+public class HeatpumpReposiory(IHttpClientFactory httpClientFactory, IOptions<UpLinkCredentialsOptions> upLinkCredentialsOptions, ILogger<HeatpumpReposiory> logger)
 {
     private const int HEAT_POINT = 47011;
 
     private readonly IHttpClientFactory _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
     private readonly UpLinkCredentialsOptions _upLinkCredentialsOptions = upLinkCredentialsOptions.Value;
-    private readonly ILogger<HeaterReposiory> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+    private readonly ILogger<HeatpumpReposiory> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
     public async Task<DataPointDto> GetCurrentHeat()
     {

@@ -7,7 +7,7 @@ using Tibber.Sdk;
 
 namespace MyTibber.Service;
 
-public sealed class ConsumptionObserver(ILogger<ConsumptionObserver> logger, HeaterReposiory heaterReposiory, IEnergyRepository energyRepository) : IObserver<RealTimeMeasurement>
+public sealed class ConsumptionObserver(ILogger<ConsumptionObserver> logger, HeatpumpReposiory heaterReposiory, IEnergyRepository energyRepository) : IObserver<RealTimeMeasurement>
 {
     private DateTime _lastEnergyPriceAdjustmentCheck = DateTime.MinValue;
 
