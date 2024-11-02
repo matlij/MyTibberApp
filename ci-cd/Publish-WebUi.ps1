@@ -5,7 +5,7 @@ param (
     [Parameter(Mandatory = $true)]
     [string]$TibberApiAccessToken,
     [Parameter(Mandatory = $false)]
-    [string]$PublishPath = "\\192.168.10.247\pimylifeupshare",
+    [string]$PublishPath = "\\192.168.10.244\pimylifeupshare",
     [Parameter(Mandatory = $false)]
     [string]$RunTime = "linux-arm64"
 )

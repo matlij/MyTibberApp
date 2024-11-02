@@ -1,5 +1,4 @@
 ﻿using MyTibber.Common.Models;
-using System.Text.Json;
 using Tibber.Sdk;
 
 namespace MyTibber.Common.Services;
@@ -32,7 +31,7 @@ public class HeatRegulator
 
         var average = prices.Average(p => p.Total);
         var highThreshold = 2m * average;
-        var lowThreshold = 0.5m * average;
+        var lowThreshold = 0.6m * average;
 
         foreach (var a in result)
         {
