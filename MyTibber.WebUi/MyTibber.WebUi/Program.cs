@@ -1,80 +1,84 @@
+using MyTibber.Common;
 using MyTibber.Common.Interfaces;
 using MyTibber.Common.Options;
 using MyTibber.Common.Repositories;
-using MyTibber.WebApi.HostedServices;
 using MyTibber.WebUi.Components;
+using MyTibber.WebUi.Extensions;
+using MyTibber.WebUi.HostedServices;
 using System.Net.Http.Headers;
 using Tibber.Sdk;
 
-namespace MyTibber.WebUi
+namespace MyTibber.WebUi;
+
+public partial class Program
 {
-    public class Program
+    public static void Main(string[] args)
     {
-        public static void Main(string[] args)
+        var builder = WebApplication.CreateBuilder(args);
+
+        // Add services to the container.
+        builder.Services.AddRazorComponents()
+            .AddInteractiveServerComponents()
+            .AddInteractiveWebAssemblyComponents();
+
+        if (!builder.Environment.IsDevelopment())
         {
-            var builder = WebApplication.CreateBuilder(args);
-
-            // Add services to the container.
-            builder.Services.AddRazorComponents()
-                .AddInteractiveServerComponents()
-                .AddInteractiveWebAssemblyComponents();
-
-            if (!builder.Environment.IsDevelopment())
-            {
-                builder.Services.AddApplicationInsightsTelemetry();
-            }
-
-            builder.Services.AddHostedService<EnergyPriceRegulatorService>();
-
-            RegisterDependencies(builder);
-
-            var app = builder.Build();
-
-            // Configure the HTTP request pipeline.
-            if (app.Environment.IsDevelopment())
-            {
-                app.UseWebAssemblyDebugging();
-            }
-            else
-            {
-                app.UseExceptionHandler("/Error");
-                // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
-                app.UseHsts();
-            }
-
-            app.UseHttpsRedirection();
-
-            app.UseStaticFiles();
-            app.UseAntiforgery();
-
-            app.MapRazorComponents<App>()
-                .AddInteractiveServerRenderMode()
-                .AddInteractiveWebAssemblyRenderMode()
-                .AddAdditionalAssemblies(typeof(Client._Imports).Assembly);
-
-            app.Run();
+            builder.Services.AddApplicationInsightsTelemetry();
         }
 
-        private static void RegisterDependencies(WebApplicationBuilder builder)
+        builder.Services.AddHostedService<HeatRegulatorHost>();
+
+        RegisterDependencies(builder);
+
+        var app = builder.Build();
+
+        // Configure the HTTP request pipeline.
+        if (app.Environment.IsDevelopment())
         {
-            builder.Services.AddHttpClient();
-
-            builder.Services.AddScoped<IEnergyRepository, EnergyRepository>();
-            builder.Services.AddScoped<HeatpumpReposiory>();
-            builder.Services.AddScoped(s =>
-            {
-                var accessToken = builder.Configuration["TibberApiClient:AccessToken"];
-                if (string.IsNullOrEmpty(accessToken))
-                {
-                    throw new KeyNotFoundException("TibberApiClient:AccessToken is missing in appsettings.json");
-                }
-                var userAgent = new ProductInfoHeaderValue("My-home-automation-system", "1.2");
-                return new TibberApiClient(accessToken, userAgent);
-            });
-
-            builder.Services.Configure<UpLinkCredentialsOptions>(
-                builder.Configuration.GetSection(UpLinkCredentialsOptions.UpLinkCredentials));
-
+            app.UseWebAssemblyDebugging();
         }
+        else
+        {
+            app.UseExceptionHandler("/Error");
+            // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
+            app.UseHsts();
+        }
+
+        app.UseHttpsRedirection();
+
+        app.UseStaticFiles();
+        app.UseAntiforgery();
+
+        app.MapRazorComponents<App>()
+            .AddInteractiveServerRenderMode()
+            .AddInteractiveWebAssemblyRenderMode()
+            .AddAdditionalAssemblies(typeof(Client._Imports).Assembly);
+
+        app.Run();
+    }
+
+    private static void RegisterDependencies(WebApplicationBuilder builder)
+    {
+        builder.Services.AddHttpClient();
+        builder.Services.AddWifiSocketClients(builder.Configuration);
+        
+        builder.Services.AddScoped<HeatResulatorService>();
+        builder.Services.AddScoped<IEnergyRepository, EnergyRepository>();
+        builder.Services.AddScoped<HeatpumpClient>();
+
+        builder.Services.AddScoped(s =>
+        {
+            var accessToken = builder.Configuration["TibberApiClient:AccessToken"];
+            if (string.IsNullOrEmpty(accessToken))
+            {
+                throw new KeyNotFoundException("TibberApiClient:AccessToken is missing in appsettings.json");
+            }
+            var userAgent = new ProductInfoHeaderValue("My-home-automation-system", "1.2");
+            return new TibberApiClient(accessToken, userAgent);
+        });
+
+        builder.Services.Configure<UpLinkCredentialsOptions>(
+            builder.Configuration.GetSection(UpLinkCredentialsOptions.UpLinkCredentials));
+
     }
 }

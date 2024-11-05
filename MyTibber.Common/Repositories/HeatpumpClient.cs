@@ -7,13 +7,13 @@ using System.Text.Json;
 
 namespace MyTibber.Common.Repositories;
 
-public class HeatpumpReposiory(IHttpClientFactory httpClientFactory, IOptions<UpLinkCredentialsOptions> upLinkCredentialsOptions, ILogger<HeatpumpReposiory> logger)
+public class HeatpumpClient(IHttpClientFactory httpClientFactory, IOptions<UpLinkCredentialsOptions> upLinkCredentialsOptions, ILogger<HeatpumpClient> logger)
 {
     private const int HEAT_POINT = 47011;
 
     private readonly IHttpClientFactory _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
     private readonly UpLinkCredentialsOptions _upLinkCredentialsOptions = upLinkCredentialsOptions.Value;
-    private readonly ILogger<HeatpumpReposiory> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+    private readonly ILogger<HeatpumpClient> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
     public async Task<DataPointDto> GetCurrentHeat()
     {
@@ -28,7 +28,7 @@ public class HeatpumpReposiory(IHttpClientFactory httpClientFactory, IOptions<Up
         return result ?? throw new InvalidOperationException($"Failed to get current heat.");
     }
 
-    public async Task<bool> UpdateHeat(int value)
+    public async Task<bool> UpdateHeat(int value, CancellationToken cancellationToken)
     {
         if (value < -10 || value > 10)
         {
@@ -46,7 +46,7 @@ public class HeatpumpReposiory(IHttpClientFactory httpClientFactory, IOptions<Up
 
         _logger.LogInformation($"Calling endpoint {uri}. Setting heat to {value}");
 
-        var response = await httpClient.PutAsJsonAsync(uri, requestBody);
+        var response = await httpClient.PutAsJsonAsync(uri, requestBody, cancellationToken);
 
         if (!response.IsSuccessStatusCode)
         {

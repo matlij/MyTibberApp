@@ -10,7 +10,7 @@ namespace MyTibber.Common.Models
         High
     }
 
-    public class HeatAdjustment
+    public class EnergyPrice
     {
         public DateTime Time { get; init; }
         public decimal Price { get; init; }

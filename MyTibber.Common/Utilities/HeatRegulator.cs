@@ -5,7 +5,7 @@ namespace MyTibber.Common.Services;
 
 public class HeatRegulator
 {
-    public static HeatAdjustment CalculateHeatAdjustments(ICollection<Price> prices, int hour)
+    public static EnergyPrice CalculateHeatAdjustments(ICollection<Price> prices, int hour)
     {
         if (hour < 0 || hour > 24)
         {
@@ -16,13 +16,13 @@ public class HeatRegulator
             ?? throw new InvalidOperationException($"Hour {hour} not found");
     }
 
-    public static IEnumerable<HeatAdjustment> CalculateHeatAdjustments(ICollection<Price> prices)
+    public static IEnumerable<EnergyPrice> CalculateHeatAdjustments(ICollection<Price> prices)
     {
         ValidatePrices(prices);
 
         var result = prices
             .OrderBy(p => p.StartsAt)
-            .Select(p => new HeatAdjustment
+            .Select(p => new EnergyPrice
             {
                 Time = DateTime.Parse(p.StartsAt),
                 Price = p.Total ?? 0,
@@ -30,7 +30,7 @@ public class HeatRegulator
             }).ToList();
 
         var average = prices.Average(p => p.Total);
-        var highThreshold = 2m * average;
+        var highThreshold = 1.8m * average;
         var lowThreshold = 0.6m * average;
 
         foreach (var a in result)

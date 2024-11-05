@@ -41,11 +41,11 @@ else
 }
 
 @code {
-    private IEnumerable<HeatAdjustment>? heatAdjustments;
+    private IEnumerable<EnergyPrice>? heatAdjustments;
 
     protected override async Task OnInitializedAsync()
     {
-        var result = new List<HeatAdjustment>();
+        var result = new List<EnergyPrice>();
 
         var todaysPrices = await EnergyRepository.GetTodaysEnergyPrices();
         result.AddRange(HeatRegulator.CalculateHeatAdjustments(todaysPrices));
