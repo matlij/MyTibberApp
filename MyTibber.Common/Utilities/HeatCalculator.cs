@@ -10,7 +10,7 @@ public static class EnergyPriceExtensions
         {
             DayPriceLevel.Normal => 0,
             DayPriceLevel.Low => 1,
-            DayPriceLevel.High => -3,
+            DayPriceLevel.High => -2,
             _ => 0,
         };
     }
@@ -19,8 +19,8 @@ public static class EnergyPriceExtensions
     {
         return price.DayPriceLevel switch
         {
-            DayPriceLevel.Normal => 8,
-            DayPriceLevel.Low => 13,
+            DayPriceLevel.Normal => 7,
+            DayPriceLevel.Low => 10,
             DayPriceLevel.High => 5,
             _ => 0,
         };
