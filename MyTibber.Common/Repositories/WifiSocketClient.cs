@@ -7,48 +7,6 @@ using System.Text.Json;
 
 namespace MyTibber.Common.Repositories;
 
-public class WifiSocketsService
-{
-    private readonly IEnumerable<WifiSocketClient> _wifiSocketClients;
-    private readonly ILogger<WifiSocketsService> _logger;
-
-    public WifiSocketsService(
-        IEnumerable<WifiSocketClient> radiators,
-        ILogger<WifiSocketsService> logger)
-    {
-        _wifiSocketClients = radiators ?? throw new ArgumentNullException(nameof(radiators));
-        _logger = logger;
-    }
-
-    public async Task UpdateAllClients(int temperature, CancellationToken cancellationToken)
-    {
-        var tasks = new List<Task>();
-
-        foreach (var client in _wifiSocketClients)
-        {
-            tasks.Add(UpdateWifiSocketSafely(client, temperature, cancellationToken));
-        }
-
-        await Task.WhenAll(tasks);
-    }
-
-    private async Task UpdateWifiSocketSafely(WifiSocketClient client, int temperature, CancellationToken cancellationToken)
-    {
-        try
-        {
-            var success = await client.UpdateHeat(temperature, cancellationToken);
-            if (!success)
-            {
-                _logger.LogWarning("Failed to update temperature for radiator {RadiatorName}", client.Name);
-            }
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error updating radiator {RadiatorName}", client.Name);
-        }
-    }
-}
-
 public class WifiSocketClient(IHttpClientFactory httpClientFactory, IOptions<WifiSocketOptions> wifiSocketOptions, ILogger<WifiSocketClient> logger)
 {
     private const string STATUS_OK = "ok";
@@ -88,14 +46,20 @@ public class WifiSocketClient(IHttpClientFactory httpClientFactory, IOptions<Wif
 
     private async Task<bool> SetTemprature(int value, CancellationToken cancellationToken)
     {
+        var httpClient = GetHttpClient();
+
         var requestBody = new SetTemprature()
         {
             Value = value
         };
-        var httpClient = GetHttpClient();
-        var response = await httpClient.PostAsJsonAsync("set-temperature", requestBody, cancellationToken: cancellationToken);
+        var requestContent = new StringContent(JsonSerializer.Serialize(requestBody));
+
+        var response = await httpClient.PostAsync("set-temperature", requestContent, cancellationToken);
+
         if (!response.IsSuccessStatusCode)
         {
+            var content = await response.Content.ReadAsStringAsync(cancellationToken) ?? string.Empty;
+            _logger.LogWarning("Set Wifi-socket temparature failed. Response code: {statuscode}. Respone message: {message}", response.StatusCode, content);
             return false;
         }
 
