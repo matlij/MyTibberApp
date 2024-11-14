@@ -59,6 +59,31 @@ public class HeatpumpClient(IHttpClientFactory httpClientFactory, IOptions<UpLin
         return true;
     }
 
+    public async Task<bool> UpdateComfortMode(ComfortMode value, CancellationToken cancellationToken)
+    {
+        var httpClient = await GetHttpClientWithAuthHeader();
+
+        var requestBody = new Dictionary<string, object>
+        {
+            { ComfortModePoint.ToString(), value }
+        };
+
+        var response = await httpClient.PatchAsJsonAsync(GetInternalUplinkAbsolutePath(), requestBody, cancellationToken);
+
+        if (!response.IsSuccessStatusCode)
+        {
+            var error = await response.Content.ReadAsStringAsync(cancellationToken);
+            _logger.LogWarning("Failed to set comfort mode. Status: {StatusCode}, Error: {Error}", response.StatusCode, error);
+
+            return false;
+        }
+
+        var responseContent = await response.Content.ReadAsStringAsync(cancellationToken);
+        _logger.LogInformation($"Successfully set comfort mode to {value}. Response: {responseContent}");
+
+        return true;
+    }
+
     private async Task<Token> GetAuthToken()
     {
         var httpClient = GetHttpClient();

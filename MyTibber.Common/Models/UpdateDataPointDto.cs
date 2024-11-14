@@ -1,11 +1,5 @@
 ﻿namespace MyTibber.Common.Models;
 
-public class UpdateDataPointDto
-{
-    public object? Value { get; set; }
-    public string? Unit { get; set; }
-}
-
 public class DataPointDto
 {
     public string? ParameterId { get; set; }
@@ -18,4 +12,11 @@ public class DataPointDto
     public DateTime Timestamp { get; set; }
     public object? MinVal { get; set; }
     public object? MaxVal { get; set; }
+}
+
+public enum ComfortMode
+{
+    Economy = 0,
+    Normal = 1,
+    Luxury = 2
 }

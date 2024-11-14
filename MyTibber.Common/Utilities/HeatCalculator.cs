@@ -15,6 +15,17 @@ public static class EnergyPriceExtensions
         };
     }
 
+    public static ComfortMode CalculateComfortMode(this EnergyPrice price)
+    {
+        return price.DayPriceLevel switch
+        {
+            DayPriceLevel.Normal => ComfortMode.Economy,
+            DayPriceLevel.Low => ComfortMode.Economy,
+            DayPriceLevel.High => ComfortMode.Normal,
+            _ => 0,
+        };
+    }
+
     public static int CalculateTargetTemperature(this EnergyPrice price)
     {
         return price.DayPriceLevel switch
