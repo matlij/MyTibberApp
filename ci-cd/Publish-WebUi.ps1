@@ -1,7 +1,7 @@
 [CmdletBinding()]
 param (
     [Parameter(Mandatory = $true)]
-    [string]$MyUplinkPassword,
+    [string]$MyUplinkClientSecret,
     [Parameter(Mandatory = $true)]
     [string]$TibberApiAccessToken,
     [Parameter(Mandatory = $false)]
@@ -12,7 +12,7 @@ param (
 
 function Update-Appsettings {
     param(
-        [string]$MyUplinkPassword,
+        [string]$MyUplinkClientSecret,
         [string]$TibberApiAccessToken
     )
     
@@ -25,7 +25,7 @@ function Update-Appsettings {
 
     $config = Get-Content -Path $configPath -Raw | ConvertFrom-Json
 
-    $config.UpLinkCredentials.Password = $MyUplinkPassword
+    $config.UpLinkCredentials.ClientSecret = $MyUplinkClientSecret
     $config.TibberApiClient.AccessToken = $TibberApiAccessToken
 
     $updatedJson = $config | ConvertTo-Json -Depth 10
@@ -41,7 +41,7 @@ if ((Test-Path $PublishPath) -eq $false) {
 
 Push-Location "C:\GIT\other\MyTibberApp\MyTibber.WebUi\MyTibber.WebUi"
 
-Update-Appsettings $MyUplinkPassword $TibberApiAccessToken
+Update-Appsettings $MyUplinkClientSecret $TibberApiAccessToken
 
 dotnet publish --configuration Release --output $PublishPath --runtime $RunTime
 
@@ -51,5 +51,5 @@ Pop-Location
 
 write-Host "How to run on RP:"
 write-Host "screen"
-write-Host "dotnet MyTibber.WebUi --urls=http://0.0.0.0:5001/"
+write-Host "dotnet MyTibber.WebUi.dll --urls=http://0.0.0.0:5001/"
 write-Host "ctrl A + ctrl D"
