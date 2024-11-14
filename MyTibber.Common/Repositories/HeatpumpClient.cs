@@ -9,7 +9,8 @@ namespace MyTibber.Common.Repositories;
 
 public class HeatpumpClient(IHttpClientFactory httpClientFactory, IOptions<UpLinkCredentialsOptions> upLinkCredentialsOptions, ILogger<HeatpumpClient> logger)
 {
-    private const int HEAT_POINT = 47011;
+    private const int HeatingOffsetPoint = 47011;
+    private const int ComfortModePoint = 47041;
 
     private readonly IHttpClientFactory _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
     private readonly UpLinkCredentialsOptions _upLinkCredentialsOptions = upLinkCredentialsOptions.Value;
@@ -19,7 +20,7 @@ public class HeatpumpClient(IHttpClientFactory httpClientFactory, IOptions<UpLin
     {
         var httpClient = await GetHttpClientWithAuthHeader();
 
-        var uri = $"{GetInternalUplinkAbsolutePath()}?parameters={HEAT_POINT}";
+        var uri = $"{GetInternalUplinkAbsolutePath()}?parameters={HeatingOffsetPoint}";
 
         var response = await httpClient.GetFromJsonAsync<IEnumerable<DataPointDto>>(uri);
 
@@ -37,19 +38,18 @@ public class HeatpumpClient(IHttpClientFactory httpClientFactory, IOptions<UpLin
 
         var httpClient = await GetHttpClientWithAuthHeader();
 
-        var requestBody = new UpdateDataPointDto()
+        var requestBody = new Dictionary<string, object>
         {
-            Value = value
+            { HeatingOffsetPoint.ToString(), value }
         };
 
-        var uri = $"{GetInternalUplinkAbsolutePath()}/{HEAT_POINT}";
-
-        _logger.LogInformation($"Calling endpoint {uri}. Setting heat to {value}");
-
-        var response = await httpClient.PutAsJsonAsync(uri, requestBody, cancellationToken);
+        var response = await httpClient.PatchAsJsonAsync(GetInternalUplinkAbsolutePath(), requestBody, cancellationToken);
 
         if (!response.IsSuccessStatusCode)
         {
+            var error = await response.Content.ReadAsStringAsync();
+            _logger.LogWarning("Failed to update heat. Status: {StatusCode}, Error: {Error}", response.StatusCode, error);
+
             return false;
         }
 
@@ -61,21 +61,25 @@ public class HeatpumpClient(IHttpClientFactory httpClientFactory, IOptions<UpLin
 
     private async Task<Token> GetAuthToken()
     {
-        HttpClient httpClient = GetHttpClient();
+        var httpClient = GetHttpClient();
 
         var postData = new Dictionary<string, string>
         {
-            { "client_id", "My-Uplink-Web" },
-            { "username", _upLinkCredentialsOptions.Username },
-            { "password", _upLinkCredentialsOptions.Password },
-            { "grant_type", "password" }
+            { "client_id", _upLinkCredentialsOptions.ClientIdentifier },
+            { "client_secret", _upLinkCredentialsOptions.ClientSecret },
+            { "grant_type", "client_credentials" }
         };
 
         var content = new FormUrlEncodedContent(postData);
 
         var authResponse = await httpClient.PostAsync("oauth/token", content);
+        if (!authResponse.IsSuccessStatusCode)
+        {
+            throw new HttpRequestException($"Auth failed with status {authResponse.StatusCode}");
+        }
 
         var authResponseContentString = await authResponse.Content.ReadAsStringAsync();
+
         return JsonSerializer.Deserialize<Token>(authResponseContentString)
             ?? throw new HttpRequestException("Deserialize reponse error: " + authResponseContentString);
     }
@@ -83,7 +87,8 @@ public class HeatpumpClient(IHttpClientFactory httpClientFactory, IOptions<UpLin
     private HttpClient GetHttpClient()
     {
         var httpClient = _httpClientFactory.CreateClient();
-        httpClient.BaseAddress = new Uri("https://internalapi.myuplink.com/");
+        httpClient.BaseAddress = new Uri("https://api.myuplink.com/");
+
         return httpClient;
     }
 

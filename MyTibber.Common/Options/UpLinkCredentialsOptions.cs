@@ -4,6 +4,6 @@ public class UpLinkCredentialsOptions
 {
     public const string UpLinkCredentials = "UpLinkCredentials";
 
-    public string Username { get; set; } = string.Empty;
-    public string Password { get; set; } = string.Empty;
+    public string ClientIdentifier { get; set; } = string.Empty;
+    public string ClientSecret { get; set; } = string.Empty;
 }
