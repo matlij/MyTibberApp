@@ -48,3 +48,8 @@ dotnet publish --configuration Release --output $PublishPath --runtime $RunTime
 Update-Appsettings "" ""
 
 Pop-Location
+
+write-Host "How to run on RP:"
+write-Host "screen"
+write-Host "dotnet MyTibber.WebUi --urls=http://0.0.0.0:5001/"
+write-Host "ctrl A + ctrl D"
