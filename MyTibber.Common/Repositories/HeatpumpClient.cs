@@ -9,25 +9,10 @@ namespace MyTibber.Common.Repositories;
 
 public class HeatpumpClient(IHttpClientFactory httpClientFactory, IOptions<UpLinkCredentialsOptions> upLinkCredentialsOptions, ILogger<HeatpumpClient> logger)
 {
-    private const int HeatingOffsetPoint = 47011;
-    private const int ComfortModePoint = 47041;
 
     private readonly IHttpClientFactory _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
     private readonly UpLinkCredentialsOptions _upLinkCredentialsOptions = upLinkCredentialsOptions.Value;
     private readonly ILogger<HeatpumpClient> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-
-    public async Task<DataPointDto> GetCurrentHeat()
-    {
-        var httpClient = await GetHttpClientWithAuthHeader();
-
-        var uri = $"{GetInternalUplinkAbsolutePath()}?parameters={HeatingOffsetPoint}";
-
-        var response = await httpClient.GetFromJsonAsync<IEnumerable<DataPointDto>>(uri);
-
-        var result = response?.FirstOrDefault() ?? throw new InvalidOperationException($"Failed to get current heat from the my uplink API. URL: {uri}");
-
-        return result ?? throw new InvalidOperationException($"Failed to get current heat.");
-    }
 
     public async Task<bool> UpdateHeat(int value, CancellationToken cancellationToken)
     {
@@ -36,11 +21,25 @@ public class HeatpumpClient(IHttpClientFactory httpClientFactory, IOptions<UpLin
             throw new ArgumentException($"Invalid value: {value}. Must be between -10 and 10", nameof(value));
         }
 
+        const int HeatingOffsetPoint = 47011;
+
+        return await PatchPoint(value, HeatingOffsetPoint, cancellationToken);
+    }
+
+    public async Task<bool> UpdateComfortMode(ComfortMode value, CancellationToken cancellationToken)
+    {
+        const int ComfortModePoint = 47041;
+
+        return await PatchPoint(value, ComfortModePoint, cancellationToken);
+    }
+
+    private async Task<bool> PatchPoint(object value, int point, CancellationToken cancellationToken)
+    {
         var httpClient = await GetHttpClientWithAuthHeader();
 
         var requestBody = new Dictionary<string, object>
         {
-            { HeatingOffsetPoint.ToString(), value }
+            { point.ToString(), value }
         };
 
         var response = await httpClient.PatchAsJsonAsync(GetInternalUplinkAbsolutePath(), requestBody, cancellationToken);
@@ -48,38 +47,13 @@ public class HeatpumpClient(IHttpClientFactory httpClientFactory, IOptions<UpLin
         if (!response.IsSuccessStatusCode)
         {
             var error = await response.Content.ReadAsStringAsync();
-            _logger.LogWarning("Failed to update heat. Status: {StatusCode}, Error: {Error}", response.StatusCode, error);
+            _logger.LogWarning("Failed to patch {Point}. Status: {StatusCode}, Error: {Error}", point, response.StatusCode, error);
 
             return false;
         }
 
         var responseContent = await response.Content.ReadAsStringAsync();
-        _logger.LogInformation($"Successfully set heater temprature to {value}. Response: {responseContent}");
-
-        return true;
-    }
-
-    public async Task<bool> UpdateComfortMode(ComfortMode value, CancellationToken cancellationToken)
-    {
-        var httpClient = await GetHttpClientWithAuthHeader();
-
-        var requestBody = new Dictionary<string, object>
-        {
-            { ComfortModePoint.ToString(), value }
-        };
-
-        var response = await httpClient.PatchAsJsonAsync(GetInternalUplinkAbsolutePath(), requestBody, cancellationToken);
-
-        if (!response.IsSuccessStatusCode)
-        {
-            var error = await response.Content.ReadAsStringAsync(cancellationToken);
-            _logger.LogWarning("Failed to set comfort mode. Status: {StatusCode}, Error: {Error}", response.StatusCode, error);
-
-            return false;
-        }
-
-        var responseContent = await response.Content.ReadAsStringAsync(cancellationToken);
-        _logger.LogInformation($"Successfully set comfort mode to {value}. Response: {responseContent}");
+        _logger.LogInformation($"Successfully patched point {point}. Response: {responseContent}");
 
         return true;
     }
