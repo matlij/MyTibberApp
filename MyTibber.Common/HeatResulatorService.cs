@@ -27,17 +27,17 @@ public class HeatResulatorService(
         }
 
         var currentHour = DateTime.Now.Hour;
-        var price = HeatRegulator.CalculateHeatAdjustments(prices, currentHour);
+        var price = HeatRegulator.CreateEneryPrices(prices, currentHour);
         var heatOffset = price.CalculateHeatOffset();
         var targetTemprature = price.CalculateTargetTemperature();
         var comfortMode = price.CalculateComfortMode();
 
         _logger.LogInformation(
             "Current energy price {Price:F2} SEK ({Level}). " +
-            "Price level considering today's prices: {DayPriceLevel} " +
+            "Price level considering today's prices: {DayPriceLevel}. " +
             "Heat offset {HeatOffset}. " +
             "Comfort mode {ComfortMode}. " +
-            "target temprature {TargetTemprature}.",
+            "Target temprature {TargetTemprature}.",
             price.Price, price.Level, price.DayPriceLevel, heatOffset, comfortMode, targetTemprature);
 
         await _wifiSocketsService.UpdateAllClients(targetTemprature, cancellationToken);

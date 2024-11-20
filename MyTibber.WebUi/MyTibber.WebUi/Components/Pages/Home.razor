@@ -48,13 +48,13 @@ else
         var result = new List<EnergyPrice>();
 
         var todaysPrices = await EnergyRepository.GetTodaysEnergyPrices();
-        result.AddRange(HeatRegulator.CalculateHeatAdjustments(todaysPrices));
+        result.AddRange(HeatRegulator.CreateEneryPrices(todaysPrices));
 
         if (DateTime.Now.Hour > 14)
         {
             var tomorrowsPrices = await EnergyRepository.GetTomorrowsEnergyPrices();
 
-            result.AddRange(HeatRegulator.CalculateHeatAdjustments(tomorrowsPrices));
+            result.AddRange(HeatRegulator.CreateEneryPrices(tomorrowsPrices));
         }
 
         heatAdjustments = result;

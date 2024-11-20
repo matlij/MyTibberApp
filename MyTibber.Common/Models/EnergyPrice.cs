@@ -1,13 +1,14 @@
-﻿using System.Runtime.Serialization;
-using Tibber.Sdk;
+﻿using Tibber.Sdk;
 
 namespace MyTibber.Common.Models
 {
     public enum DayPriceLevel
     {
         Normal,
+        VeryLow,
         Low,
-        High
+        High,
+        VeryHigh,
     }
 
     public class EnergyPrice
@@ -16,6 +17,5 @@ namespace MyTibber.Common.Models
         public decimal Price { get; init; }
         public PriceLevel Level { get; init; }
         public DayPriceLevel DayPriceLevel { get; set; } = DayPriceLevel.Normal;
-        public int Adjustment { get; set; } // Remove
     }
 }
